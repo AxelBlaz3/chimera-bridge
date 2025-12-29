@@ -1,4 +1,4 @@
-# FlutterBridge Generator
+# 🦁 Chimera Bridge
 
 **Run Flutter code inside React Native without requiring the Flutter SDK.**
 
