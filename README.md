@@ -137,8 +137,36 @@ const response = await GeneratedModule.authenticate("user1", "token123");
 
 ---
 
-## ⚠️ Troubleshooting
+## ⚠️ Troubleshooting & Gotchas
 
-* **Android Build Fail:** Ensure you use `$rootDir` in `android/build.gradle`.
-* **"Profile" Build Type Error:** The generator handles this automatically. If manually editing, ensure `buildTypes { profile { initWith release } }` exists.
-* **iOS "NO_ENGINE":** The bridge initializes lazily. On the very first call, there might be a split-second delay.
+### 1. Android Build Fail: "Could not find com.generated..."
+
+* **Error:** `Could not resolve com.generated.flutter_module:flutter_debug:1.0`
+* **Cause:** Gradle is looking in the wrong folder because it doesn't know how to resolve the relative path to `node_modules` from the subproject context.
+* **Fix:** Ensure you used **`$rootDir`** in the `allprojects` repository block (see Android Configuration above). Do not use plain relative paths like `../node_modules`.
+
+### 2. "Profile" Build Type Error
+
+* **Error:** `Could not find method profileImplementation()`
+* **Cause:** The consumer app (React Native) usually only has `debug` and `release` modes. Flutter adds a third mode called `profile`.
+* **Fix:** The generator automatically adds a `profile` build type to the library's `build.gradle`. If you are manually editing files, ensure the library's `android` block contains:
+
+  ```groovy
+  buildTypes {
+      profile {
+          initWith release
+          matchingFallbacks = ['release']
+      }
+  }
+  ```
+
+### 3. "Cannot convert argument of type java.util.HashMap"
+
+* **Error:** App crashes when Flutter returns a value.
+* **Cause:** React Native cannot send raw Java Maps/Lists over the bridge. They must be converted to `WritableMap` or `WritableArray`.
+* **Fix:** The generator handles this automatically using `Arguments.makeNativeMap` (Android). iOS handles this conversion natively.
+
+### 4. iOS: "NO_ENGINE" Error
+
+* **Cause:** You tried to call a Flutter method before the engine finished initializing.
+* **Fix:** The bridge initializes lazily. On the very first call, there might be a split-second delay. The iOS generator includes `requiresMainQueueSetup` to mitigate this, but ensure your implementation doesn't block the main thread.
