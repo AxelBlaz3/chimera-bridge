@@ -2,44 +2,24 @@
 
 **Seamlessly bridge Flutter logic into React Native apps.**
 
-Chimera Bridge is a **Mason Brick** that generates the glue code required to run a Flutter module inside a React Native application. It automates the creation of MethodChannels, EventChannels, and Native Modules for Android (Kotlin), iOS (Swift), and TypeScript.
+Chimera Bridge is a **Mason Brick** that generates a fully-functional React Native library from a Dart specification. It automates the "glue code" between TypeScript, Kotlin (Android), Swift (iOS), and the Flutter Engine.
 
 ---
 
 ## 🚀 Features
 
-- **Polyglot Generation:** Generates Kotlin, Swift, TypeScript, and Dart code from one source.
-- **Type Safety:** Maps Dart types (`int`, `Map`, `List`) to Native equivalents (`Double/NSNumber`, `ReadableMap`, etc.).
-- **Bi-Directional Communication:** Support for standard Promises and real-time Streams.
-- **Local Binary Support:** Pre-configured for local `.aar` and `.xcframework` consumption.
+- **Polyglot Generation:** Automated Kotlin, Swift, TypeScript, and Dart generation.
+- **Type Safety:** Intelligent mapping of Dart types to Native/TS equivalents.
+- **Bi-Directional Communication:** Support for Promises (Futures) and Events (Streams).
+- **Local Binary Strategy:** Optimized for consuming Flutter AARs and XCFrameworks directly from your library folder.
 
 ---
 
-## 🛠️ Installation
+## 🛠️ Installation & Setup
 
-1. **Add the Brick**:
+### 1. The Dart Specification
 
-   ```bash
-   mason add chimera_bridge --path ./chimera_bridge
-   ```
-
-2. **Add Dependencies** to `pubspec.yaml`:
-
-   ```yaml
-   dependencies:
-     flutter:
-       sdk: flutter
-     chimera_bridge:
-       path: ./lib/
-   ```
-
----
-
-## 📖 Usage Guide
-
-### 1. Define Your Contract
-
-Annotate a class in `lib/specs/` with `@ReactBridge`.
+Define your interface in `lib/specs/` using the `@ReactBridge` annotation.
 
 ```dart
 @ReactBridge(name: "MathModule")
@@ -49,35 +29,81 @@ abstract class MathSpec {
 }
 ```
 
-### 2. Generate the Bridge
+### 2. Run the Generator
 
-Run the generator with your project-specific configurations.
+Run mason with your project-specific configurations:
 
 ```bash
 mason make chimera_bridge \
   --name MathModule \
-  --package_name com.example.coolapp \
+  --package_name com.example.app \
   --agp_version 8.1.0 \
-  --kotlin_version 1.8.10 \
-  --flutter_group_id com.example.my_flutter_logic
+  --kotlin_version 1.8.10
 ```
 
-#### Available Arguments (`vars`)
+### 3. Pack and Install the Module
 
-| Variable | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `name` | string | `MyModule` | Name of the Native Module |
-| `package_name` | string | `com.myapp` | Android Package Name |
-| `agp_version` | string | `7.4.2` | Android Gradle Plugin Version |
-| `kotlin_version` | string | `1.8.0` | Kotlin Version |
-| `compile_sdk` | string | `33` | Android Compile SDK |
-| `min_sdk` | string | `21` | Android Min SDK |
-| `ios_platform` | string | `11.0` | Minimum iOS version |
-| `flutter_group_id` | string | `com.example.flutter_module` | Group ID used for Flutter AARs |
+To ensure a clean installation that mimics a production environment, pack the generated module into a tarball and install it:
 
-### 3. Implement Flutter Logic
+```bash
+# 1. Go to the generated module directory
+cd math-module
 
-Open `lib/main.dart` and initialize the bridge.
+# 2. Create a tarball (.tgz)
+npm pack
+
+# 3. Go to your React Native root project
+cd ../my-react-native-app
+
+# 4. Install the tarball
+npm install ../path/to/math-module-1.0.0.tgz
+```
+
+---
+
+## 🤖 Android Configuration
+
+To support the local Flutter AARs without moving files into your host project, update `android/build.gradle` in your **React Native host project**:
+
+```gradle
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+
+        // 1. Point to the local AARs inside the node_modules bridge directory
+        maven {
+            url = uri("$rootDir/../node_modules/math-module/android/libs/")
+        }
+
+        // 2. Add the Flutter engine repository
+        maven {
+            url = uri("[https://storage.googleapis.com/download.flutter.io](https://storage.googleapis.com/download.flutter.io)")
+        }
+    }
+}
+```
+
+---
+
+## 🍏 iOS Configuration
+
+#### A. Framework Placement
+
+Run `flutter build ios-framework` and place the generated `.xcframework` files into the `ios/` directory of the generated module (e.g., `math-module/ios/`) **before** running `npm pack`.
+
+#### B. Pod Installation
+
+```bash
+cd ios
+npx pod-install
+```
+
+---
+
+## 🏗️ Flutter Implementation
+
+Initialize the bridge in your Flutter `main.dart`. Chimera runs "headless," so `runApp` is typically not required.
 
 ```dart
 import 'package:flutter/material.dart';
@@ -94,34 +120,83 @@ class MathModuleImplementation extends MathModuleImplementation {
 
   @override
   Stream<int> countStream() async* {
-    for (int i = 0; i < 100; i++) {
-      await Future.delayed(Duration(seconds: 1));
-      yield i;
-    }
+    yield* Stream.periodic(Duration(seconds: 1), (i) => i);
   }
 }
 ```
 
-### 4. Binary Infrastructure
+---
 
-The brick configures native builds to consume local artifacts:
-
-- **Android:** The `build.gradle` uses `namespace` (for AGP 8.0+) and looks for AARs in `android/libs` matching your `flutter_group_id`.
-- **iOS:** The `.podspec` vends `Flutter.xcframework` and `App.xcframework` from the local `ios/` directory.
-
-### 5. Consume in React Native
+## 💻 React Native Usage
 
 ```typescript
 import MathModule from 'math-module';
 
-// Promise
+// 1. Methods (Promises)
 const result = await MathModule.multiply(10, 5);
 
-// Stream
-const sub = MathModule.onCountStream(num => console.log(num));
+// 2. Streams (Events)
+useEffect(() => {
+  const subscription = MathModule.onCountStream((count) => {
+    console.log("Flutter says:", count);
+  });
 
-// Cleanup (Important!)
-sub.remove();
+  return () => subscription.remove();
+}, []);
 ```
 
 ---
+
+## ⚙️ Generator Arguments (vars)
+
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `name` | Native Module Name | `MyModule` |
+| `package_name` | Android Package (e.g. `com.myapp`) | `com.myapp` |
+| `agp_version` | Android Gradle Plugin Version | `7.4.2` |
+| `kotlin_version` | Kotlin Version | `1.8.0` |
+| `flutter_group_id` | Group ID for AAR lookup | `com.example.flutter_module` |
+
+---
+
+## 🤝 Contributing
+
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+### How to contribute
+
+1. **Fork the Project**
+2. **Create your Feature Branch** (`git checkout -b feature/AmazingFeature`)
+3. **Commit your Changes** (`git commit -m 'Add some AmazingFeature'`)
+4. **Push to the Branch** (`git checkout push origin feature/AmazingFeature`)
+5. **Open a Pull Request**
+
+### Development Note
+
+This project uses **Mason**. When contributing:
+
+- Native templates are located in `__brick__`.
+- Generation logic and type-mapping are located in `hooks/pre_gen.dart`.
+- Post-generation cleanup is located in `hooks/post_gen.dart`.
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+## 💡 Troubleshooting
+
+### `MissingPluginException`
+
+This usually means `MathModuleBridge.setup()` was not called in your Flutter `main.dart`.
+
+### `Unresolved reference: reactContext` (Android)
+
+The bridge uses `private val reactContext` in the constructor. Ensure your native templates are synced.
+
+### White-space in generated code
+
+The bridge logic separates `streams` and `futures` in the `pre_gen` hook to ensure clean Mustache rendering.
