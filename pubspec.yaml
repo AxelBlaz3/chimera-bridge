@@ -1,17 +1,14 @@
 name: bridge_generator
-description: A sample command-line application.
+description: Generates Chimera Bridge code for RN (Turbo) -> Native -> Flutter.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
-
 environment:
-  sdk: ^3.10.4
+  sdk: '>=3.0.0 <4.0.0'
 
-# Add regular dependencies here.
 dependencies:
-  path: ^1.9.1
-  analyzer: ^9.0.0
-  args: ^2.7.0
+  mason: ^0.1.0
+  path: ^1.8.0
 
 dev_dependencies:
   lints: ^6.0.0
-  test: ^1.25.6
+  build_runner: ^2.4.0
+  mason_cli: ^0.1.0
