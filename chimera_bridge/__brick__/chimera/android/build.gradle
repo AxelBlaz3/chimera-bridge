@@ -45,7 +45,7 @@ dependencies {
     implementation "com.facebook.react:react-native:+"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:{{kotlin_version}}"
     
-    debugImplementation "{{flutter_group_id}}:flutter_debug:1.0"
-    profileImplementation "{{flutter_group_id}}:flutter_profile:1.0"
-    releaseImplementation "{{flutter_group_id}}:flutter_release:1.0"
+    debugImplementation "{{package_name}}:flutter_debug:1.0"
+    profileImplementation "{{package_name}}:flutter_profile:1.0"
+    releaseImplementation "{{package_name}}:flutter_release:1.0"
 }

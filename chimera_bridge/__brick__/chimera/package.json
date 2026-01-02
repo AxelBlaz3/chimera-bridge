@@ -1,5 +1,5 @@
 {
-  "name": "{{name.paramCase()}}",
+  "name": "{{name.snakeCase()}}",
   "version": "1.0.0",
   "description": "Bridge module for {{name}}",
   "main": "src/index.ts",

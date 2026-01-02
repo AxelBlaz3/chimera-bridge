@@ -51,7 +51,3 @@ vars:
     type: string
     description: Minimum iOS version
     default: "11.0"
-  flutter_group_id:
-    type: string
-    description: The group ID used when generating Flutter AARs
-    default: "com.example.flutter_module"
