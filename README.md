@@ -146,7 +146,7 @@ allprojects {
 
         // 2. Add the Flutter engine repository
         maven {
-            url = uri("[https://storage.googleapis.com/download.flutter.io](https://storage.googleapis.com/download.flutter.io)")
+            url = uri("https://storage.googleapis.com/download.flutter.io")
         }
     }
 }

@@ -7,88 +7,98 @@ Future<void> run(HookContext context) async {
   final name = vars['name'] as String;
   final packageName = vars['package_name'] as String;
 
-  // Update pubspec.yaml (NEW STEP)
-  // This ensures the Flutter module's internal package name matches the bridge.
+  // 1. Update pubspec.yaml
   await _updatePubspec(logger, packageName);
 
-  // 1. Calculate Paths to Generated Files
-  // We only want to format what we created, not the whole project.
+  // 2. Calculate Paths
   final dartFile = 'lib/dart_api/${name.snakeCase}_bridge.dart';
-
-  // Convert package dots to path slashes (e.g. com.example -> com/example)
   final packagePath = packageName.replaceAll('.', '/');
   final kotlinModule =
       'chimera/android/src/main/java/$packagePath/${name.pascalCase}Module.kt';
   final kotlinPackage =
       'chimera/android/src/main/java/$packagePath/${name.pascalCase}Package.kt';
-
   final swiftFile = 'chimera/ios/${name.pascalCase}.swift';
   final objcFile = 'chimera/ios/${name.pascalCase}.m';
 
-  // 2. Format Dart (Built-in, safe to run)
+  // 3. Format Code (Dart, Kotlin, Swift, ObjC)
   await _formatFile(logger, 'dart', ['format'], dartFile);
 
-  // 3. Format Kotlin (ktlint)
   await _runFormatterIfExists(
     logger,
     executable: 'ktlint',
-    args: ['-F'], // -F flag usually means "Format" in ktlint CLI
+    args: ['-F'],
     files: [kotlinModule, kotlinPackage],
     installHint:
         'brew install ktlint (Mac) or curl -sSLO https://github.com/pinterest/ktlint/releases/latest/download/ktlint && chmod a+x ktlint (Linux/Windows)',
   );
 
-  // 4. Format Swift (swift-format)
   await _runFormatterIfExists(
     logger,
     executable: 'swift-format',
-    args: ['-i'], // -i for in-place
+    args: ['-i'],
     files: [swiftFile],
     installHint: 'brew install swift-format (Mac)',
   );
 
-  // 5. Format ObjC (clang-format)
   await _runFormatterIfExists(
     logger,
     executable: 'clang-format',
-    args: ['-i'], // -i for in-place
+    args: ['-i'],
     files: [objcFile],
     installHint:
         'brew install clang-format (Mac) or apt install clang-format (Linux)',
   );
 
-  // 6. Make scripts executable
-  if (!Platform.isWindows) {
-    try {
-      final scripts = ['scripts/build_android.sh', 'scripts/build_ios.sh'];
-      for (final script in scripts) {
-        if (File(script).existsSync()) {
-          await Process.run('chmod', ['+x', script]);
-        }
-      }
-      logger.detail('✅ Made build scripts executable');
-    } catch (e) {
-      logger.warn('Could not set script permissions: $e');
-    }
-  }
-
-  // 7. Success Message
+  // 4. Success Message with Host Instructions
+  // Note: We use \${} to escape the dollar sign for Gradle variables in the printout
   logger.success('''
   🦁 Chimera Bridge Created: $name
   
   NEXT STEPS:
-  ---------------------------------------------------------
-  1. Implement logic:  lib/main.dart
-     -> import 'package:$packageName/dart_api/${name.snakeCase}_bridge.dart';
-     -> call ${name}Bridge.setup(...)
+  =========================================================
   
-  2. Build Binaries:
-     -> ./scripts/build_android.sh
-     -> ./scripts/build_ios.sh
+  1. IMPLEMENT FLUTTER LOGIC:
+     File: lib/main.dart
+     -----------------------------------------------------
+     import 'package:$packageName/dart_api/${name.snakeCase}_bridge.dart';
      
-  3. Install in React Native:
-     -> npm install ./path/to/${name.snakeCase}-1.0.0.tgz
-  ---------------------------------------------------------
+     void main() {
+       WidgetsFlutterBinding.ensureInitialized();
+       ${name}Bridge.setup(MyImplementation());
+     }
+  
+  2. BUILD BINARIES:
+     -----------------------------------------------------
+     dart run scripts/build_android.dart
+     dart run scripts/build_ios.dart
+     
+  3. INSTALL IN REACT NATIVE:
+     -----------------------------------------------------
+     cd chimera
+     npm pack
+     # In your RN app:
+     npm install ../path/to/chimera/${name.snakeCase}-1.0.0.tgz
+
+  4. CONFIGURE HOST (ANDROID):
+     File: android/build.gradle (Root)
+     -----------------------------------------------------
+     allprojects {
+       repositories {
+         // ...
+         maven { url("\$rootDir/../node_modules/${name.snakeCase}/android/libs") }
+         maven { url("https://storage.googleapis.com/download.flutter.io") }
+       }
+     }
+
+  5. REGISTER PACKAGE (MainApplication.kt):
+     (Only if autolinking fails)
+     -----------------------------------------------------
+     import $packageName.${name.pascalCase}Package
+
+     // In getPackages():
+     add(${name.pascalCase}Package())
+
+  =========================================================
   ''');
 }
 
@@ -157,7 +167,6 @@ Future<void> _updatePubspec(Logger logger, String packageName) async {
     // (.*)$ = Capture the rest of the line to replace it
     final androidRegex =
         RegExp(r'^(\s*androidPackage:\s+)(.*)$', multiLine: true);
-
     if (androidRegex.hasMatch(content)) {
       content = content.replaceAllMapped(androidRegex, (match) {
         // match.group(1) preserves the indentation and key (e.g. "  androidPackage: ")
@@ -168,7 +177,6 @@ Future<void> _updatePubspec(Logger logger, String packageName) async {
     // 2. Regex for iosBundleIdentifier
     final iosRegex =
         RegExp(r'^(\s*iosBundleIdentifier:\s+)(.*)$', multiLine: true);
-
     if (iosRegex.hasMatch(content)) {
       content = content.replaceAllMapped(iosRegex, (match) {
         return '${match.group(1)}$packageName';
