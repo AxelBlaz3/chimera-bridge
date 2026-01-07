@@ -18,7 +18,7 @@ Pod::Spec.new do |s|
   s.source_files = "**/*.{h,m,swift}"
   
   # 2. Frameworks are now in the local "Frameworks" folder
-  s.vendored_frameworks = 'Frameworks/App.xcframework', 'Frameworks/Flutter.xcframework'
+  s.vendored_frameworks = 'ios/Frameworks/Release/*.xcframework'
   
   s.dependency "React-Core"
 end

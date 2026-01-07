@@ -87,7 +87,7 @@ class {{name.pascalCase()}}: RCTEventEmitter {
    * Exposed React Method: {{methodName}}
    */
   @objc
-  func {{methodName}}({{#params}}{{#isFirst}}_ {{name}}: {{sType}}{{/isFirst}}{{^isFirst}}{{name}} {{name}}: {{sType}}{{/isFirst}}, {{/params}}resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+  func {{methodName}}({{#params}}{{#isFirst}}_ {{name}}: {{sType}}{{/isFirst}}{{^isFirst}}{{name}} {{name}}: {{sType}}{{/isFirst}}, {{/params}}resolve resolve: @escaping RCTPromiseResolveBlock, reject reject: @escaping RCTPromiseRejectBlock) {
       let args: [String: Any] = [
           {{#params}}"{{name}}": {{name}},{{/params}}
       ]
