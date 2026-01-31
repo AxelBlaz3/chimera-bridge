@@ -22,13 +22,13 @@ Chimera Bridge is a **Mason Brick** that generates a fully-functional React Nati
 | :--- | :--- | :--- |
 | **Android** | ✅ Stable | Fully tested with local AARs and AGP 8.0+. |
 | **TypeScript** | ✅ Stable | Type definitions and Promise/Observable wrappers are verified. |
-| **iOS** | 🚧 Beta | Scaffolded and currently being verified on device by the maintainer. |
+| **iOS** | ✅ Stable | Framework bundling and Podspec logic are verified. |
 
 ## 🗺️ Roadmap
 
-- [ ] 🍏 **iOS Verification:** Validate `RCTEventEmitter` and Swift selector mapping.
+- [x] 🍏 **iOS Verification:** Validate `RCTEventEmitter` and Swift selector mapping.
+- [x] 🧪 **Testing:** Unit tests for `pre_gen.dart` logic added.
 - [ ] 📦 **Distribution:** Publish brick to BrickHub.
-- [ ] 🧪 **Testing:** Add unit tests for the Mason `pre_gen.dart` logic.
 - [ ] 📝 **Docs:** Add examples for complex nested types (e.g., `List<Map<String, int>>`).
 
 ---
@@ -46,17 +46,25 @@ cd math_module
 
 ### 2. Define the Spec
 
-Create a file inside your new module (e.g., `lib/specs/math.dart`) to define your interface using the `@ReactBridge` annotation.
+Create a file inside your new module (e.g., `lib/specs/math.dart`) to define your interface.
 
-*Note: You may need to create a simple annotation class if you haven't installed the annotation package yet.*
+**Option A: Auto-Discovery (Recommended)**
+Simply name your class to match the module name (e.g. `MathUtils`).
 
 ```dart
 // lib/specs/math.dart
-@ReactBridge(name: "MathUtils")
-abstract class MathSpec {
+abstract class MathUtils {
   Future<double> multiply(double a, double b);
   Stream<int> countStream();
 }
+```
+
+**Option B: Annotation**
+Use `@ReactBridge` if you need a different class name.
+
+```dart
+@ReactBridge(name: "MathUtils")
+abstract class MyMathSpec { ... }
 ```
 
 ### 3. Run the Generator
@@ -66,9 +74,7 @@ Run mason **inside the module directory**. This will generate the bridge artifac
 ```bash
 mason make chimera_bridge \
   --name MathUtils \
-  --package_name com.example.mathutils \
-  --agp_version 8.1.0 \
-  --kotlin_version 1.8.10
+  --package_name com.example.mathutils
 ```
 
 ### 4. Implement Flutter Logic
@@ -82,7 +88,11 @@ import 'package:math_module/dart_api/math_utils_bridge.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // Connect the bridge implementation
+  
+  // 1. (Optional) Dispose old listeners if hot-restarting or manually managing lifecycle
+  // MathUtilsBridge.dispose(); 
+  
+  // 2. Connect the bridge implementation
   MathUtilsBridge.setup(MathUtilsImplementation());
 }
 
