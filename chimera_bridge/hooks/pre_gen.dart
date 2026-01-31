@@ -8,6 +8,8 @@ import 'package:analyzer/dart/ast/ast.dart';
 /// ---------------------------------------------------------------------------
 /// TYPE MAPPING CONFIGURATION
 /// ---------------------------------------------------------------------------
+/// Maps Dart types to their equivalents in Kotlin (k), Swift (s), Objective-C (o),
+/// and TypeScript (t).
 const typeMap = {
   // Primitives
   'String': {'k': 'String', 's': 'String', 'o': 'NSString *', 't': 'string'},
@@ -40,6 +42,7 @@ Future<void> run(HookContext context) async {
   // ========================================================================
   // 1. ROOT DETECTION & SCANNING
   // ========================================================================
+  // Locate the 'lib/' directory to scope the search efficiently.
   var searchDir = Directory.current;
   if (!Directory.fromUri(searchDir.uri.resolve('lib')).existsSync()) {
     final parentDir = searchDir.parent;
@@ -79,17 +82,18 @@ Future<void> run(HookContext context) async {
       continue;
     }
 
-    // Optimization: Skip if neither annotation nor target name is present
+    // Optimization: Skip parsing if neither annotation nor target name is present in text.
     final hasAnnotation = content.contains('ReactBridge');
     final hasTargetName = content.contains('class $targetName');
 
     if (!hasAnnotation && !hasTargetName) continue;
 
     try {
+      // Parse the AST of the file
       final unit = parseString(content: content).unit;
       for (var decl in unit.declarations) {
         if (decl is ClassDeclaration) {
-          // Check for @ReactBridge
+          // Priority 1: Check for explicit @ReactBridge annotation
           if (hasAnnotation) {
             for (var m in decl.metadata) {
               // ignore: deprecated_member_use
@@ -102,7 +106,7 @@ Future<void> run(HookContext context) async {
             }
           }
 
-          // Check for Name Match (if no annotation found yet)
+          // Priority 2: Check for Name Match (Auto-Discovery)
           if (specFile == null && decl.name.lexeme == targetName) {
             fallbackFile = file;
             fallbackClass = decl;
@@ -111,7 +115,7 @@ Future<void> run(HookContext context) async {
         if (specFile != null) break;
       }
     } catch (e) {
-      // Ignore parsing errors
+      // Ignore parsing errors (e.g. invalid Dart syntax in some file)
     }
     if (specFile != null) break;
   }

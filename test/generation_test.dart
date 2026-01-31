@@ -18,101 +18,57 @@ void main() {
 
     test('Generates matching artifacts for AllTypes spec', () async {
       // 1. Setup Temp Project
+      // We create a fresh temporary directory to mimic a user's Flutter project.
       final libDir = Directory(path.join(tempDir.path, 'lib'))..createSync();
-
-      // Copy Spec
+      
+      // Copy Spec: We use the complex 'AllTypes' spec which covers Futures, Streams, and all primitives.
       File(path.join(projectRoot.path, 'test/fixtures/spec/all_types.dart'))
           .copySync(path.join(libDir.path, 'all_types.dart'));
 
       // Create mason.yaml pointing to local brick
-
+      // This ensures we test the *current* version of the brick code.
       File(path.join(tempDir.path, 'mason.yaml')).writeAsStringSync('''
+bricks:
+  chimera_bridge:
+    path: ${projectRoot.path}/chimera_bridge
+''');
 
-      bricks:
-
-        chimera_bridge:
-
-          path: ${projectRoot.path}/chimera_bridge
-
-      ''');
-
-      // Create minimal pubspec.yaml for mason_cli
-
-      File(path.join(tempDir.path, 'pubspec.yaml')).writeAsStringSync('''
-
-      name: temp_test
-
-      environment:
-
-        sdk: '>=3.0.0 <4.0.0'
-
-      dev_dependencies:
-
-        mason_cli: ^0.1.0
-
-      ''');
-
-      // Create config.json to avoid interactive prompts
-
+      // Create config.json to avoid interactive prompts during 'mason make'
       File(path.join(tempDir.path, 'config.json')).writeAsStringSync('''
+{
+  "name": "AllTypes",
+  "package_name": "com.example.alltypes",
+  "kotlin_version": "1.8.0",
+  "agp_version": "7.4.2",
+  "compile_sdk": "33",
+  "min_sdk": "21",
+  "ios_platform": "11.0"
+}
+''');
 
+      // Create minimal pubspec.yaml for mason_cli so 'dart run' works
+      File(path.join(tempDir.path, 'pubspec.yaml')).writeAsStringSync('''
+name: temp_test
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+dev_dependencies:
+  mason_cli: ^0.1.0
+''');
       
-
-            {
-
-      
-
-              "name": "AllTypes",
-
-      
-
-              "package_name": "com.example.alltypes",
-
-      
-
-              "kotlin_version": "1.8.0",
-
-      
-
-              "agp_version": "7.4.2",
-
-      
-
-              "compile_sdk": "33",
-
-      
-
-              "min_sdk": "21",
-
-      
-
-              "ios_platform": "11.0"
-
-      
-
-            }
-
-      
-
-            ''');
-
+      // Ensure 'dart' is available in the path for post_gen hooks (formatting)
       final dartDir = path.dirname(Platform.executable);
-
       final env = {
         'PATH': '$dartDir:${Platform.environment['PATH'] ?? ''}',
       };
 
       // 1.5 Run Pub Get
-
       final pubGetResult = await Process.run(
         Platform.executable,
         ['pub', 'get'],
         workingDirectory: tempDir.path,
         environment: env,
       );
-
-      expect(pubGetResult.exitCode, 0,
-          reason: 'pub get failed: ${pubGetResult.stderr}');
+      expect(pubGetResult.exitCode, 0, reason: 'pub get failed: ${pubGetResult.stderr}');
 
       // 2. Run Mason Get
 
