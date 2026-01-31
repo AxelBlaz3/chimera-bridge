@@ -5,4 +5,5 @@ import 'package:mockito/annotations.dart';
   MockSpec<HookContext>(),
   MockSpec<Logger>(),
 ])
+// ignore: unused_import
 import 'mocks.mocks.dart';
