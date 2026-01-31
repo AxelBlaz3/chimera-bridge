@@ -133,8 +133,9 @@ void main() {
   // This registers the MethodChannels so React Native can call them.
   MathModuleBridge.setup(MyMathLogic());
 }
+```
 
-Create a portable tarball (`.tgz`) that includes the code and the binary artifacts.
+### 6. Package for Distribution
 
 ```bash
 cd mobile_app_repo
