@@ -1,0 +1,30 @@
+name: chimera_bridge
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install Dependencies
+        run: dart pub get
+
+      - name: Analyze
+        run: dart analyze .
+
+      - name: Format
+        run: dart format --set-exit-if-changed .
+
+      - name: Run Tests
+        run: dart test
