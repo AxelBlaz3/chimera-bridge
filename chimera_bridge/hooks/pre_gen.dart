@@ -123,7 +123,8 @@ Future<void> run(HookContext context) async {
     specFile = fallbackFile;
     annotatedClass = fallbackClass;
   } else {
-    logger.err('❌ Could not find any class annotated with @ReactBridge OR named "$targetName".');
+    logger.err(
+        '❌ Could not find any class annotated with @ReactBridge OR named "$targetName".');
     exit(1);
   }
 
@@ -136,7 +137,7 @@ Future<void> run(HookContext context) async {
   // Get Module Name
   String moduleName = annotatedClass.name.lexeme;
   try {
-    if (bridgeAnnotation != null && 
+    if (bridgeAnnotation != null &&
         bridgeAnnotation.arguments != null &&
         bridgeAnnotation.arguments!.arguments.isNotEmpty) {
       final firstArg = bridgeAnnotation.arguments!.arguments.first;

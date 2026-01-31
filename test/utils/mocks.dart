@@ -18,38 +18,49 @@ class MockLogger implements Logger {
   void detail(String? message, {LogStyle? style}) => details.add(message ?? '');
 
   @override
-  void warn(String? message, {String tag = 'WARN', LogStyle? style}) => infos.add('$tag: $message');
+  void warn(String? message, {String tag = 'WARN', LogStyle? style}) =>
+      infos.add('$tag: $message');
 
   @override
-  void success(String? message, {LogStyle? style}) => infos.add('SUCCESS: $message');
+  void success(String? message, {LogStyle? style}) =>
+      infos.add('SUCCESS: $message');
 
   @override
-  void alert(String? message, {LogStyle? style}) => infos.add('ALERT: $message');
-  
+  void alert(String? message, {LogStyle? style}) =>
+      infos.add('ALERT: $message');
+
   @override
-  String prompt(String? message, {Object? defaultValue, bool hidden = false}) => '';
+  String prompt(String? message, {Object? defaultValue, bool hidden = false}) =>
+      '';
 
   @override
   bool confirm(String? message, {bool defaultValue = false}) => defaultValue;
 
   @override
-  Progress progress(String message, {ProgressOptions? options}) => _MockProgress();
+  Progress progress(String message, {ProgressOptions? options}) =>
+      _MockProgress();
 
   // Correct Generic Implementation
   @override
-  List<T> chooseAny<T extends Object?>(String? message, {required List<T> choices, List<T>? defaultValues, String Function(T choice)? display}) {
+  List<T> chooseAny<T extends Object?>(String? message,
+      {required List<T> choices,
+      List<T>? defaultValues,
+      String Function(T choice)? display}) {
     return [];
   }
 
   @override
-  T chooseOne<T extends Object?>(String? message, {required List<T> choices, T? defaultValue, String Function(T choice)? display}) {
+  T chooseOne<T extends Object?>(String? message,
+      {required List<T> choices,
+      T? defaultValue,
+      String Function(T choice)? display}) {
     if (defaultValue != null) return defaultValue;
     return choices.first;
   }
-  
+
   @override
   void write(String? message) => infos.add(message ?? '');
-  
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
