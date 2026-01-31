@@ -19,20 +19,38 @@ Chimera Bridge is a **Mason Brick** that generates a fully-functional React Nati
 ## 🏛️ Architecture
 
 ```mermaid
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'primaryColor': '#EADDFF',
+      'primaryTextColor': '#21005D',
+      'primaryBorderColor': '#4F378B',
+      'lineColor': '#6750A4',
+      'secondaryColor': '#E8DEF8',
+      'tertiaryColor': '#FFD8E4',
+      'fontFamily': 'Product Sans, Roboto, sans-serif'
+    }
+  }
+}%%
 graph TD
     subgraph "Flutter Module"
-        A[Dart Spec] -->|Mason| B[Chimera Generator]
+        A[Dart Spec] -->|Mason| B(Chimera Generator)
         B -->|Generates| C[Dart Bridge API]
         B -->|Generates| D["Native Bridge (Kotlin/Swift)"]
         B -->|Generates| E[TypeScript Definitions]
     end
 
     subgraph "React Native App"
-        F[React Native JS] -->|Calls| E
+        F(React Native JS) -->|Calls| E
         E -->|TurboModule/Bridge| D
         D -->|MethodChannel| C
-        C -->|Executes| G[Flutter Logic]
+        C -->|Executes| G(Flutter Logic)
     end
+    
+    style A fill:#FFD8E4,stroke:#31111D,color:#31111D
+    style B fill:#D0BCFF,stroke:#381E72,color:#381E72
+    style G fill:#B6F397,stroke:#0F2900,color:#0F2900
 ```
 
 ---

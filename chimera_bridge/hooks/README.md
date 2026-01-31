@@ -18,10 +18,24 @@ The pre-generation hook is responsible for "understanding" your Dart code. It us
 ### Workflow Diagram
 
 ```mermaid
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'primaryColor': '#CCE8E4',
+      'primaryTextColor': '#051F19',
+      'primaryBorderColor': '#4A635D',
+      'lineColor': '#006A60',
+      'secondaryColor': '#BCEBE2',
+      'tertiaryColor': '#FFD8E4',
+      'fontFamily': 'Product Sans, Roboto, sans-serif'
+    }
+  }
+}%%
 flowchart TD
-    A[Start Hook] --> B{Scan lib/ for .dart files}
+    A([Start Hook]) --> B{Scan lib/ for .dart files}
     B --> C[Parse File AST]
-    C --> D{Contains 'class $Name'?}
+    C --> D{"Contains 'class $Name'?"}
     C --> E{Contains @ReactBridge?}
     
     D -- Yes --> F[Candidate Found]
@@ -30,7 +44,11 @@ flowchart TD
     F --> G[Extract Methods & Params]
     G --> H[Map Dart Types to TS/Kotlin/Swift]
     H --> I[Populate Mason Vars]
-    I --> J[End Hook]
+    I --> J([End Hook])
+    
+    style A fill:#B6F397,stroke:#0F2900
+    style J fill:#FFD8E4,stroke:#31111D
+    style F fill:#D0BCFF,stroke:#381E72
 ```
 
 ### Type Mapping
