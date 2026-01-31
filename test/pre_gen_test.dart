@@ -66,44 +66,67 @@ void main() {
       expect(multiply['returnTsType'], equals('number'));
 
       final params = multiply['params'] as List;
+
       expect(params.length, equals(2));
+
       expect(params[0]['name'], equals('a'));
+
       expect(params[0]['tsType'], equals('number'));
+
+      // Check hasStreams
+
+      expect(updatedVars['hasStreams'], isFalse);
     });
 
     test('Annotation: Finds class with @ReactBridge even if name differs',
         () async {
       // 1. Setup: Create a file where class name != module name, but has annotation
+
       final libDir = Directory(path.join(tempDir.path, 'lib'))..createSync();
+
       final file = File(path.join(libDir.path, 'some_spec.dart'));
 
       file.writeAsStringSync('''
-        @ReactBridge(name: "Calculator")
-        abstract class MySpec {
-          Future<String> getName();
-        }
-      ''');
+
+              @ReactBridge(name: "Calculator")
+
+              abstract class MySpec {
+
+                Stream<int> getTicks();
+
+              }
+
+            ''');
 
       // 2. Setup Context (Name defaults to something else initially)
+
       final initialVars = <String, dynamic>{
         'name': 'Calculator',
         'package_name': 'com.test.app'
       };
+
       when(context.vars).thenReturn(initialVars);
 
       // 3. Run Hook
+
       await pre_gen.run(context);
 
       // 4. Verify
+
       final verification = verify(context.vars = captureAny);
+
       final updatedVars = verification.captured.last as Map<String, dynamic>;
 
       expect(
           updatedVars['name'], equals('Calculator')); // Should confirm the name
 
+      expect(updatedVars['hasStreams'], isTrue); // Should detect the stream
+
       final methods = updatedVars['methods'] as List;
-      final getName = methods.firstWhere((m) => m['methodName'] == 'getName');
-      expect(getName['returnTsType'], equals('string'));
+
+      final getTicks = methods.firstWhere((m) => m['methodName'] == 'getTicks');
+
+      expect(getTicks['isStream'], isTrue);
     });
   });
 }

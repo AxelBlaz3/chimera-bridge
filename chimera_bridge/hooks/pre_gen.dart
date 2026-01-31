@@ -242,6 +242,7 @@ Future<void> run(HookContext context) async {
     'methods': methods,
     'streams': streams,
     'futures': futures,
+    'hasStreams': streams.isNotEmpty,
     'package_path': packagePath,
   };
 }

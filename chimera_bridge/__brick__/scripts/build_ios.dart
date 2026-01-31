@@ -37,11 +37,14 @@ void main() async {
   print('[BUILD] Building iOS Frameworks...');
 
   // Output directly to the chimera package folder
-  await _runCommand('flutter', [
-    'build',
-    'ios-framework',
-    '--output=chimera/ios/Frameworks',
-  ], workingDir: rootDir.path);
+  await _runCommand(
+      'flutter',
+      [
+        'build',
+        'ios-framework',
+        '--output=chimera/ios/Frameworks',
+      ],
+      workingDir: rootDir.path);
 
   print('✅ iOS build complete! Frameworks are ready in chimera/ios/Frameworks');
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -15,22 +16,37 @@ abstract class {{name.pascalCase()}}Implementation {
 /// -----------------------------------------------------------------------------
 class {{name.pascalCase()}}Bridge {
   static const MethodChannel _channel = MethodChannel('{{package_name}}.{{name.snakeCase()}}');
+  {{#hasStreams}}
+  static final List<StreamSubscription> _subscriptions = [];
+
+  /// Cleans up active stream subscriptions.
+  /// Call this if you need to stop the bridge without destroying the Flutter Engine.
+  static void dispose() {
+    for (final sub in _subscriptions) sub.cancel();
+    _subscriptions.clear();
+  }
+  {{/hasStreams}}
 
   static void setup({{name.pascalCase()}}Implementation implementation) {
     WidgetsFlutterBinding.ensureInitialized();
     DartPluginRegistrant.ensureInitialized();
+    
+    {{#hasStreams}}
+    // 0. Ensure a clean state (handles Hot Restart or re-initialization)
+    dispose();
 
     // 1. Setup Stream Listeners (Push from Dart -> Native)
     {{#streams}}
-    implementation.{{methodName}}().listen(
+    _subscriptions.add(implementation.{{methodName}}().listen(
       (event) {
         _channel.invokeMethod('{{methodName}}', event);
       },
       onError: (error) {
         _channel.invokeMethod('{{methodName}}', {'_error': error.toString()});
       },
-    );
+    ));
     {{/streams}}
+    {{/hasStreams}}
 
     // 2. Handle Incoming Calls (Pull from Native -> Dart)
     _channel.setMethodCallHandler((call) async {

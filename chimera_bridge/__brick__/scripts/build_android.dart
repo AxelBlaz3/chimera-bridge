@@ -20,12 +20,15 @@ void main() async {
 
   // 3. Build AAR
   print('[BUILD] Building Android AAR...');
-  await _runCommand('flutter', [
-    'build',
-    'aar',
-    '--no-profile',
-    '--no-release',
-  ], workingDir: rootDir.path);
+  await _runCommand(
+      'flutter',
+      [
+        'build',
+        'aar',
+        '--no-profile',
+        '--no-release',
+      ],
+      workingDir: rootDir.path);
 
   // 4. Move Artifacts
   final sourceRepo = Directory('${rootDir.path}/build/host/outputs/repo');
