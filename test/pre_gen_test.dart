@@ -1,20 +1,29 @@
 import 'dart:io';
 import 'package:test/test.dart';
 import 'package:path/path.dart' as path;
+import 'package:mockito/mockito.dart';
 
 // Import the hook script
 import '../chimera_bridge/hooks/pre_gen.dart' as pre_gen;
-import 'utils/mocks.dart';
+import 'utils/mocks.mocks.dart';
 
 void main() {
   group('PreGen Hook', () {
     late Directory tempDir;
     late Directory originalCurrent;
+    late MockHookContext context;
+    late MockLogger logger;
 
     setUp(() {
       originalCurrent = Directory.current;
       tempDir = Directory.systemTemp.createTempSync('chimera_test_');
       Directory.current = tempDir;
+
+      context = MockHookContext();
+      logger = MockLogger();
+
+      // Default stubs
+      when(context.logger).thenReturn(logger);
     });
 
     tearDown(() {
@@ -35,14 +44,21 @@ void main() {
       ''');
 
       // 2. Setup Context
-      final context = MockContext();
-      context.vars = {'name': 'MathModule', 'package_name': 'com.test.app'};
+      final initialVars = <String, dynamic>{
+        'name': 'MathModule',
+        'package_name': 'com.test.app'
+      };
+      when(context.vars).thenReturn(initialVars);
 
       // 3. Run Hook
       await pre_gen.run(context);
 
       // 4. Verify
-      final methods = context.vars['methods'] as List;
+      // Capture the argument passed to the context.vars setter
+      final verification = verify(context.vars = captureAny);
+      final updatedVars = verification.captured.last as Map<String, dynamic>;
+
+      final methods = updatedVars['methods'] as List;
       expect(methods, isNotEmpty);
 
       final multiply = methods.firstWhere((m) => m['methodName'] == 'multiply');
@@ -69,17 +85,23 @@ void main() {
       ''');
 
       // 2. Setup Context (Name defaults to something else initially)
-      final context = MockContext();
-      context.vars = {'name': 'Calculator', 'package_name': 'com.test.app'};
+      final initialVars = <String, dynamic>{
+        'name': 'Calculator',
+        'package_name': 'com.test.app'
+      };
+      when(context.vars).thenReturn(initialVars);
 
       // 3. Run Hook
       await pre_gen.run(context);
 
       // 4. Verify
-      expect(context.vars['name'],
-          equals('Calculator')); // Should confirm the name
+      final verification = verify(context.vars = captureAny);
+      final updatedVars = verification.captured.last as Map<String, dynamic>;
 
-      final methods = context.vars['methods'] as List;
+      expect(
+          updatedVars['name'], equals('Calculator')); // Should confirm the name
+
+      final methods = updatedVars['methods'] as List;
       final getName = methods.firstWhere((m) => m['methodName'] == 'getName');
       expect(getName['returnTsType'], equals('string'));
     });
