@@ -1,3 +1,4 @@
-# 0.1.0+1
+# 1.0.0
 
-- TODO: Describe initial release.
+- Initial Release.
+- Added support for Auto-Discovery: Classes matching the `name` variable are now automatically detected even without the `@ReactBridge` annotation.

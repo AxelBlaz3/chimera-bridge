@@ -13,7 +13,8 @@ Chimera Bridge is a **Mason Brick** that generates a "Headless" Flutter module w
 ## 🚀 Features
 
 * **Zero Flutter Dependency for Consumers:** The React Native app does *not* need the Flutter SDK installed.
-* **Annotation Driven:** Just add `@ReactBridge` to a Dart class, and we handle the rest.
+* **Auto-Discovery:** Automatically finds your class if it matches the module name (no annotation needed!).
+* **Annotation Support:** Use `@ReactBridge` to explicitly mark a class or override the module name.
 * **Type-Safe:** Auto-generates TypeScript definitions (`.d.ts`) and Dart abstract interfaces.
 * **Binary Distribution:** Automatically bundles compiled AARs (Android) and XCFrameworks (iOS).
 * **Smart Formatting:** automatically formats generated code (Prettier, SwiftFormat, ktlint, Dart Format).
@@ -30,17 +31,28 @@ Chimera Bridge is a **Mason Brick** that generates a "Headless" Flutter module w
 
 ### 2. Create Your Spec
 
-Inside your Flutter project, create a Dart file (e.g., `lib/specs/math_spec.dart`) and define your interface.
+Inside your Flutter project, create a Dart file (e.g., `lib/specs/math_module.dart`) and define your interface.
+
+**Option A: Auto-Discovery (Recommended)**
+Name your class to match the module name (e.g. `MathModule`).
+
+```dart
+// lib/specs/math_module.dart
+abstract class MathModule {
+  Future<double> multiply(int a, int b);
+}
+```
+
+**Option B: Explicit Annotation**
+Use `@ReactBridge` if your class name differs or you want to be explicit.
 
 ```dart
 // lib/specs/math_spec.dart
-import 'package:chimera_annotations/chimera_annotations.dart'; // (Or just define a dummy annotation)
+import 'package:chimera_annotations/chimera_annotations.dart'; 
 
 @ReactBridge(name: "MathModule")
-abstract class MathSpec {
+abstract class MyMathSpec {
   Future<double> multiply(int a, int b);
-  Future<String> createUser(Map<String, dynamic> user);
-  Future<void> syncItems(List<String> ids);
 }
 ```
 

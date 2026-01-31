@@ -116,13 +116,18 @@ Future<void> _runFormatterIfExists(
     await _formatFile(logger, executable, args, files.join(' '));
   } else {
     logger.detail(
-        '⚠️  Skipping $executable (not found). Install via: $installHint');
+      '⚠️  Skipping $executable (not found). Install via: $installHint',
+    );
   }
 }
 
 /// Helper to actually run the process
 Future<void> _formatFile(
-    Logger logger, String exe, List<String> args, String filePaths) async {
+  Logger logger,
+  String exe,
+  List<String> args,
+  String filePaths,
+) async {
   try {
     // Split file paths into individual arguments if multiple are passed
     final finalArgs = [...args, ...filePaths.split(' ')];
@@ -165,8 +170,10 @@ Future<void> _updatePubspec(Logger logger, String packageName) async {
     // ^ = Start of line
     // \s* = Any indentation
     // (.*)$ = Capture the rest of the line to replace it
-    final androidRegex =
-        RegExp(r'^(\s*androidPackage:\s+)(.*)$', multiLine: true);
+    final androidRegex = RegExp(
+      r'^(\s*androidPackage:\s+)(.*)$',
+      multiLine: true,
+    );
     if (androidRegex.hasMatch(content)) {
       content = content.replaceAllMapped(androidRegex, (match) {
         // match.group(1) preserves the indentation and key (e.g. "  androidPackage: ")
@@ -175,8 +182,10 @@ Future<void> _updatePubspec(Logger logger, String packageName) async {
     }
 
     // 2. Regex for iosBundleIdentifier
-    final iosRegex =
-        RegExp(r'^(\s*iosBundleIdentifier:\s+)(.*)$', multiLine: true);
+    final iosRegex = RegExp(
+      r'^(\s*iosBundleIdentifier:\s+)(.*)$',
+      multiLine: true,
+    );
     if (iosRegex.hasMatch(content)) {
       content = content.replaceAllMapped(iosRegex, (match) {
         return '${match.group(1)}$packageName';

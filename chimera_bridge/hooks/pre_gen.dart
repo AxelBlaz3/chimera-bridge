@@ -21,7 +21,7 @@ const typeMap = {
     'k': 'ReadableMap',
     's': '[String: Any]',
     'o': 'NSDictionary *',
-    't': 'object'
+    't': 'object',
   },
   'List': {'k': 'ReadableArray', 's': '[Any]', 'o': 'NSArray *', 't': 'any[]'},
 };
@@ -49,14 +49,23 @@ Future<void> run(HookContext context) async {
   }
 
   final glob = Glob('**/*.dart', recursive: true);
+
+  // Search State
   File? specFile;
   ClassDeclaration? annotatedClass;
   Annotation? bridgeAnnotation;
 
-  logger.info('🔍 Scanning for @ReactBridge candidates...');
+  // Fallback State (Matches Name but no Annotation)
+  File? fallbackFile;
+  ClassDeclaration? fallbackClass;
 
-  await for (final entity
-      in glob.list(root: searchDir.path, followLinks: false)) {
+  final targetName = context.vars['name'] as String? ?? 'MyModule';
+  logger.info('🔍 Scanning for @ReactBridge or class "$targetName"...');
+
+  await for (final entity in glob.list(
+    root: searchDir.path,
+    followLinks: false,
+  )) {
     if (entity.statSync().type != FileSystemEntityType.file) continue;
     if (entity.path.contains(RegExp(r'[\\/]\.'))) continue;
     if (entity.path.contains('chimera_bridge')) continue;
@@ -70,20 +79,32 @@ Future<void> run(HookContext context) async {
       continue;
     }
 
-    if (!content.contains('ReactBridge')) continue;
+    // Optimization: Skip if neither annotation nor target name is present
+    final hasAnnotation = content.contains('ReactBridge');
+    final hasTargetName = content.contains('class $targetName');
+
+    if (!hasAnnotation && !hasTargetName) continue;
 
     try {
       final unit = parseString(content: content).unit;
       for (var decl in unit.declarations) {
         if (decl is ClassDeclaration) {
-          if (decl.metadata.isEmpty) continue;
-          for (var m in decl.metadata) {
-            if (m.name.name == 'ReactBridge') {
-              specFile = file;
-              annotatedClass = decl;
-              bridgeAnnotation = m;
-              break;
+          // Check for @ReactBridge
+          if (hasAnnotation) {
+            for (var m in decl.metadata) {
+              if (m.name.name == 'ReactBridge') {
+                specFile = file;
+                annotatedClass = decl;
+                bridgeAnnotation = m;
+                break;
+              }
             }
+          }
+
+          // Check for Name Match (if no annotation found yet)
+          if (specFile == null && decl.name.lexeme == targetName) {
+            fallbackFile = file;
+            fallbackClass = decl;
           }
         }
         if (specFile != null) break;
@@ -94,8 +115,15 @@ Future<void> run(HookContext context) async {
     if (specFile != null) break;
   }
 
-  if (specFile == null || annotatedClass == null) {
-    logger.err('❌ Could not find any class annotated with @ReactBridge.');
+  // Decision Logic
+  if (specFile != null && annotatedClass != null) {
+    logger.info('✅ Found @ReactBridge in ${specFile.path}');
+  } else if (fallbackFile != null && fallbackClass != null) {
+    logger.info('✅ Found class "$targetName" in ${fallbackFile.path}');
+    specFile = fallbackFile;
+    annotatedClass = fallbackClass;
+  } else {
+    logger.err('❌ Could not find any class annotated with @ReactBridge OR named "$targetName".');
     exit(1);
   }
 
@@ -108,7 +136,8 @@ Future<void> run(HookContext context) async {
   // Get Module Name
   String moduleName = annotatedClass.name.lexeme;
   try {
-    if (bridgeAnnotation!.arguments != null &&
+    if (bridgeAnnotation != null && 
+        bridgeAnnotation.arguments != null &&
         bridgeAnnotation.arguments!.arguments.isNotEmpty) {
       final firstArg = bridgeAnnotation.arguments!.arguments.first;
       if (firstArg is NamedExpression && firstArg.name.label.name == 'name') {
