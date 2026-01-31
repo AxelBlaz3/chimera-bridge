@@ -92,6 +92,7 @@ Future<void> run(HookContext context) async {
           // Check for @ReactBridge
           if (hasAnnotation) {
             for (var m in decl.metadata) {
+              // ignore: deprecated_member_use
               if (m.name.name == 'ReactBridge') {
                 specFile = file;
                 annotatedClass = decl;
@@ -141,6 +142,7 @@ Future<void> run(HookContext context) async {
         bridgeAnnotation.arguments != null &&
         bridgeAnnotation.arguments!.arguments.isNotEmpty) {
       final firstArg = bridgeAnnotation.arguments!.arguments.first;
+      // ignore: deprecated_member_use
       if (firstArg is NamedExpression && firstArg.name.label.name == 'name') {
         moduleName = firstArg.expression
             .toSource()
@@ -153,6 +155,7 @@ Future<void> run(HookContext context) async {
   // Process Methods
   final methods = <Map<String, dynamic>>[];
 
+  // ignore: deprecated_member_use
   for (var member in annotatedClass.members) {
     if (member is MethodDeclaration) {
       final methodName = member.name.lexeme;
