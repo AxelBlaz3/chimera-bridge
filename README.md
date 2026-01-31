@@ -23,7 +23,7 @@ graph TD
     subgraph "Flutter Module"
         A[Dart Spec] -->|Mason| B[Chimera Generator]
         B -->|Generates| C[Dart Bridge API]
-        B -->|Generates| D[Native Bridge (Kotlin/Swift)]
+        B -->|Generates| D["Native Bridge (Kotlin/Swift)"]
         B -->|Generates| E[TypeScript Definitions]
     end
 
