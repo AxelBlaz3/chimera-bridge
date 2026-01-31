@@ -2,7 +2,7 @@
 
 **Run Flutter code inside React Native without requiring the Flutter SDK.**
 
-Chimera Bridge is a **Mason Brick** that generates a "Headless" Flutter module wrapper. It scans your Flutter code for `@ReactBridge` annotations and automatically generates:
+Chimera Bridge is a **Mason Brick** that generates a "Headless" Flutter module wrapper. It scans your Flutter code to automatically generate:
 
 1. **Native Modules:** Kotlin (Android) and Swift (iOS) bridges.
 2. **TypeScript:** Typed interfaces for React Native.
@@ -34,7 +34,8 @@ Chimera Bridge is a **Mason Brick** that generates a "Headless" Flutter module w
 Inside your Flutter project, create a Dart file (e.g., `lib/specs/math_module.dart`) and define your interface.
 
 **Option A: Auto-Discovery (Recommended)**
-Name your class to match the module name (e.g. `MathModule`).
+Name your class to match the `name` variable you will pass to Mason.
+*Example:* `mason make ... --name MathModule` -> looks for `class MathModule`.
 
 ```dart
 // lib/specs/math_module.dart
@@ -132,8 +133,6 @@ void main() {
   // This registers the MethodChannels so React Native can call them.
   MathModuleBridge.setup(MyMathLogic());
 }
-
-### 6. Package for Distribution
 
 Create a portable tarball (`.tgz`) that includes the code and the binary artifacts.
 
